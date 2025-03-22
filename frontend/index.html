@@ -2,12 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>Job Portal | Find Your Dream Job</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <style>
+      /* High Contrast Mode (Optional, can be removed) */
+      body.high-contrast {
+        background-color: black;
+        color: yellow;
+      }
+      button:focus, input:focus {
+        outline: 3px solid blue;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="root">
+      <!-- 🚨 This message will show if React fails to load -->
+      <noscript>
+        <p style="color: red; text-align: center; font-weight: bold;">
+          ⚠️ JavaScript is disabled or the app failed to load. Please check the console for errors.
+        </p>
+      </noscript>
+    </div>
+
+    <!-- Load Main React App -->
+    <script type="module" src="/src/main.jsx" defer></script>
   </body>
 </html>

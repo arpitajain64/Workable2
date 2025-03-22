@@ -34,5 +34,14 @@ const userSchema = new mongoose.Schema({
             default:""
         }
     },
+    notifications: [  // New field to store notifications
+        {
+            message: { type: String, required: true },
+            type: { type: String, enum: ['job_update', 'application_status', 'message'], required: true },
+            isRead: { type: Boolean, default: false },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ]
 },{timestamps:true});
+
 export const User = mongoose.model('User', userSchema);

@@ -7,12 +7,14 @@ import { APPLICATION_API_END_POINT, JOB_API_END_POINT } from '@/utils/constant';
 import { setSingleJob } from '@/redux/jobSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
+import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
 
 const JobDescription = () => {
-    const {singleJob} = useSelector(store => store.job);
-    const {user} = useSelector(store=>store.auth);
-    const isIntiallyApplied = singleJob?.applications?.some(application => application.applicant === user?._id) || false;
-    const [isApplied, setIsApplied] = useState(isIntiallyApplied);
+    const { singleJob, savedJobs } = useSelector(store => store.job);
+    const { user } = useSelector(store => store.auth);
+    const isInitiallyApplied = singleJob?.applications?.some(application => application.applicant === user?._id) || false;
+    const [isApplied, setIsApplied] = useState(isInitiallyApplied);
+    const [isSaved, setIsSaved] = useState(savedJobs?.some(job => job._id === singleJob?._id));
 
     const params = useParams();
     const jobId = params.id;
@@ -20,35 +22,48 @@ const JobDescription = () => {
 
     const applyJobHandler = async () => {
         try {
-            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, {withCredentials:true});
-            
-            if(res.data.success){
-                setIsApplied(true); // Update the local state
-                const updatedSingleJob = {...singleJob, applications:[...singleJob.applications,{applicant:user?._id}]}
-                dispatch(setSingleJob(updatedSingleJob)); // helps us to real time UI update
+            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, { withCredentials: true });
+            if (res.data.success) {
+                setIsApplied(true);
+                const updatedSingleJob = { ...singleJob, applications: [...singleJob.applications, { applicant: user?._id }] }
+                dispatch(setSingleJob(updatedSingleJob));
                 toast.success(res.data.message);
-
             }
         } catch (error) {
             console.log(error);
             toast.error(error.response.data.message);
         }
-    }
+    };
 
-    useEffect(()=>{
+    const saveJobHandler = async () => {
+        try {
+            // Assume we have an endpoint for saving jobs
+            const res = await axios.post(`${JOB_API_END_POINT}/save/${jobId}`, {}, { withCredentials: true });
+            if (res.data.success) {
+                setIsSaved(true);
+                toast.success("Job saved successfully");
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to save job");
+        }
+    };
+
+    useEffect(() => {
         const fetchSingleJob = async () => {
             try {
-                const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`,{withCredentials:true});
-                if(res.data.success){
+                const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, { withCredentials: true });
+                if (res.data.success) {
                     dispatch(setSingleJob(res.data.job));
-                    setIsApplied(res.data.job.applications.some(application=>application.applicant === user?._id)) // Ensure the state is in sync with fetched data
+                    setIsApplied(res.data.job.applications.some(application => application.applicant === user?._id));
+                    setIsSaved(savedJobs?.some(job => job._id === res.data.job._id));
                 }
             } catch (error) {
                 console.log(error);
             }
-        }
-        fetchSingleJob(); 
-    },[jobId,dispatch, user?._id]);
+        };
+        fetchSingleJob();
+    }, [jobId, dispatch, user?._id, savedJobs]);
 
     return (
         <div className='max-w-7xl mx-auto my-10'>
@@ -61,12 +76,18 @@ const JobDescription = () => {
                         <Badge className={'text-[#7209b7] font-bold'} variant="ghost">{singleJob?.salary}LPA</Badge>
                     </div>
                 </div>
-                <Button
-                onClick={isApplied ? null : applyJobHandler}
-                    disabled={isApplied}
-                    className={`rounded-lg ${isApplied ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#7209b7] hover:bg-[#5f32ad]'}`}>
-                    {isApplied ? 'Already Applied' : 'Apply Now'}
-                </Button>
+                <div className='flex items-center gap-4'>
+                    <Button
+                        onClick={isApplied ? null : applyJobHandler}
+                        disabled={isApplied}
+                        className={`rounded-lg ${isApplied ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#7209b7] hover:bg-[#5f32ad]'}`}
+                    >
+                        {isApplied ? 'Already Applied' : 'Apply Now'}
+                    </Button>
+                    <Button onClick={saveJobHandler} className='bg-gray-300 hover:bg-gray-400 rounded-lg'>
+                        {isSaved ? <FaBookmark className='text-yellow-500' /> : <FaRegBookmark />}
+                    </Button>
+                </div>
             </div>
             <h1 className='border-b-2 border-b-gray-300 font-medium py-4'>Job Description</h1>
             <div className='my-4'>
@@ -79,7 +100,7 @@ const JobDescription = () => {
                 <h1 className='font-bold my-1'>Posted Date: <span className='pl-4 font-normal text-gray-800'>{singleJob?.createdAt.split("T")[0]}</span></h1>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default JobDescription
+export default JobDescription;
